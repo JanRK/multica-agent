@@ -1,0 +1,89 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract versions
+        id: version
+        run: |
+          MULTICA_TAG=$(grep -oP '<!-- MULTICA:\K[^ ]+(?= -->)' README.md)
+          OPENCODE_TAG=$(grep -oP '<!-- OPENCODE:\K[^ ]+(?= -->)' README.md)
+          if [ -z "$MULTICA_TAG" ] || [ -z "$OPENCODE_TAG" ]; then
+            echo "ERROR: Could not extract version markers from README.md"
+            exit 1
+          fi
+          COMPOSITE="m${MULTICA_TAG#v}-o${OPENCODE_TAG#v}"
+          echo "multica=$MULTICA_TAG" >> "$GITHUB_OUTPUT"
+          echo "opencode=$OPENCODE_TAG" >> "$GITHUB_OUTPUT"
+          echo "composite=$COMPOSITE" >> "$GITHUB_OUTPUT"
+          echo "Versions: multica=$MULTICA_TAG opencode=$OPENCODE_TAG tag=$COMPOSITE"
+
+      - name: Check if already built
+        id: check
+        run: |
+          TAG="${{ steps.version.outputs.composite }}"
+          if git tag -l | grep -qx "$TAG"; then
+            echo "Tag $TAG already exists — skipping build"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG not found — proceeding with build"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up QEMU
+        if: steps.check.outputs.skip != 'true'
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.skip != 'true'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        if: steps.check.outputs.skip != 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: steps.check.outputs.skip != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          build-args: |
+            MULTICA_VERSION=${{ steps.version.outputs.multica }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/janrk/multica-agent:${{ steps.version.outputs.composite }}
+            ghcr.io/janrk/multica-agent:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Tag version
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          TAG="${{ steps.version.outputs.composite }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" -m "multica ${{ steps.version.outputs.multica }}, opencode ${{ steps.version.outputs.opencode }}"
+          git push origin "$TAG"
