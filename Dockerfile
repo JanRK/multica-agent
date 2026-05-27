@@ -38,4 +38,14 @@ RUN mkdir -p /home/multica/multica_workspaces
 ENV MULTICA_WORKSPACES_ROOT=/home/multica/multica_workspaces \
     MULTICA_OPENCODE_PATH=/usr/local/bin/opencode
 
-ENTRYPOINT ["sh", "-c", "while [ ! -f ~/.multica/config.json ]; do sleep 5; done; exec multica daemon start --foreground"]
+ENTRYPOINT ["sh", "-c", "\
+  if [ ! -f ~/.multica/config.json ]; then \
+    echo ''; \
+    echo '=== Multica not authenticated ==='; \
+    echo 'Run: docker exec -it <container> multica login'; \
+    echo 'Note: port-forward the port shown in the callback URL to this container'; \
+    echo ''; \
+    echo 'Waiting for ~/.multica/config.json ...'; \
+    while [ ! -f ~/.multica/config.json ]; do sleep 5; done; \
+  fi; \
+  exec multica daemon start --foreground"]
