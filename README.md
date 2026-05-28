@@ -1,6 +1,6 @@
 # Multica Agent
 
-<!-- MULTICA:v0.3.9 -->
+<!-- MULTICA:v0.3.10 -->
 <!-- OPENCODE:v1.15.11 -->
 
 [![GHCR](https://img.shields.io/badge/ghcr.io-janrk%2Fmultica--agent-blue?logo=github)](https://github.com/JanRK/multica-agent/pkgs/container/multica-agent)
