@@ -26,15 +26,17 @@ jobs:
         run: |
           MULTICA_TAG=$(grep -oP '<!-- MULTICA:\K[^ ]+(?= -->)' README.md)
           OPENCODE_TAG=$(grep -oP '<!-- OPENCODE:\K[^ ]+(?= -->)' README.md)
-          if [ -z "$MULTICA_TAG" ] || [ -z "$OPENCODE_TAG" ]; then
+          HERMES_TAG=$(grep -oP '<!-- HERMES:\K[^ ]+(?= -->)' README.md)
+          if [ -z "$MULTICA_TAG" ] || [ -z "$OPENCODE_TAG" ] || [ -z "$HERMES_TAG" ]; then
             echo "ERROR: Could not extract version markers from README.md"
             exit 1
           fi
-          COMPOSITE="m${MULTICA_TAG#v}-o${OPENCODE_TAG#v}"
+          COMPOSITE="m${MULTICA_TAG#v}-o${OPENCODE_TAG#v}-h${HERMES_TAG#v}"
           echo "multica=$MULTICA_TAG" >> "$GITHUB_OUTPUT"
           echo "opencode=$OPENCODE_TAG" >> "$GITHUB_OUTPUT"
+          echo "hermes=$HERMES_TAG" >> "$GITHUB_OUTPUT"
           echo "composite=$COMPOSITE" >> "$GITHUB_OUTPUT"
-          echo "Versions: multica=$MULTICA_TAG opencode=$OPENCODE_TAG tag=$COMPOSITE"
+          echo "Versions: multica=$MULTICA_TAG opencode=$OPENCODE_TAG hermes=$HERMES_TAG tag=$COMPOSITE"
 
       - name: Check if already built
         id: check
@@ -85,5 +87,5 @@ jobs:
           TAG="${{ steps.version.outputs.composite }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG" -m "multica ${{ steps.version.outputs.multica }}, opencode ${{ steps.version.outputs.opencode }}"
+          git tag "$TAG" -m "multica ${{ steps.version.outputs.multica }}, opencode ${{ steps.version.outputs.opencode }}, hermes ${{ steps.version.outputs.hermes }}"
           git push origin "$TAG"
