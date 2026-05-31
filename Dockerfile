@@ -2,7 +2,7 @@ FROM debian:trixie-slim
 
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git ca-certificates jq \
+    curl git ca-certificates jq openssh-client xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install multica CLI
@@ -26,6 +26,10 @@ RUN set -e; \
     curl -sL "https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-${ARCH}.tar.gz" \
       | tar -xz -C /usr/local/bin opencode; \
     chmod +x /usr/local/bin/opencode
+
+# Install Hermes agent (full install via official script)
+RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh \
+    | bash -s -- --skip-setup --skip-browser
 
 # Create non-root user
 RUN useradd -m -s /bin/bash multica
