@@ -73,6 +73,7 @@ jobs:
           context: .
           build-args: |
             MULTICA_VERSION=${{ steps.version.outputs.multica }}
+            HERMES_VERSION=${{ steps.version.outputs.hermes }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
