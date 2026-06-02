@@ -2,7 +2,7 @@ FROM debian:trixie-slim
 
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git ca-certificates jq openssh-client xz-utils \
+    curl git ca-certificates jq openssh-client xz-utils ripgrep ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install multica CLI
@@ -27,9 +27,20 @@ RUN set -e; \
       | tar -xz -C /usr/local/bin opencode; \
     chmod +x /usr/local/bin/opencode
 
-# Install Hermes agent (full install via official script)
-RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh \
-    | bash -s -- --skip-setup --skip-browser
+# Install Hermes agent (full install via official script, pinned to a release tag)
+ARG HERMES_VERSION=latest
+RUN set -e; \
+    if [ "$HERMES_VERSION" = "latest" ]; then \
+      HERMES_TAG=$(curl -fsSL https://api.github.com/repos/NousResearch/hermes-agent/releases/latest | jq -r '.tag_name'); \
+      if [ -z "$HERMES_TAG" ] || [ "$HERMES_TAG" = "null" ]; then \
+        echo "ERROR: Could not determine latest hermes-agent release"; exit 1; \
+      fi; \
+    else \
+      HERMES_TAG="${HERMES_VERSION#v}"; HERMES_TAG="v${HERMES_TAG}"; \
+    fi; \
+    echo "Installing hermes-agent ${HERMES_TAG}"; \
+    curl -fsSL "https://raw.githubusercontent.com/NousResearch/hermes-agent/${HERMES_TAG}/scripts/install.sh" \
+      | bash -s -- --skip-setup --skip-browser
 
 # Create non-root user
 RUN useradd -m -s /bin/bash multica
