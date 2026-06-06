@@ -2,7 +2,7 @@
 
 <!-- MULTICA:v0.3.17 -->
 <!-- OPENCODE:v1.16.2 -->
-<!-- HERMES:v2026.5.29.2 -->
+<!-- HERMES:v2026.6.5 -->
 
 [![GHCR](https://img.shields.io/badge/ghcr.io-janrk%2Fmultica--agent-blue?logo=github)](https://github.com/JanRK/multica-agent/pkgs/container/multica-agent)
 [![Version](https://img.shields.io/badge/version-m0.3.8--o1.15.10-blue)](https://github.com/JanRK/multica-agent/pkgs/container/multica-agent)
