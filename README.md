@@ -1,6 +1,6 @@
 # Multica Agent
 
-<!-- MULTICA:v0.3.24 -->
+<!-- MULTICA:v0.3.26 -->
 <!-- OPENCODE:v1.17.8 -->
 <!-- HERMES:v2026.6.5 -->
 
